@@ -13,6 +13,7 @@ const cregRoutes = require('./routes/creg');
 const simemRoutes = require('./routes/simem');
 const sinergoxRoutes = require('./routes/sinergox');
 const educativoRoutes = require('./routes/educativo');
+const certificatesRoutes = require('./routes/certificates');
 const Modulo = require('./models/Modulo');
 const modulosData = require('./data/modulosData');
 
@@ -37,6 +38,8 @@ app.use(helmet({
 // SEGURIDAD: CORS restringido
 // ============================================================
 const allowedOrigins = [
+  'http://localhost',          // Frontend en Docker (puerto 80)
+  'http://localhost:80',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:4173',
@@ -109,6 +112,7 @@ app.use('/api/creg', cregRoutes);
 app.use('/api/simem', simemRoutes);
 app.use('/api/sinergox', sinergoxRoutes);
 app.use('/api/educativo', educativoRoutes);
+app.use('/api/certificates', certificatesRoutes);
 
 // ============================================================
 // HEALTH CHECK

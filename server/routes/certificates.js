@@ -1,0 +1,91 @@
+const express = require('express');
+const router = express.Router();
+const authMiddleware = require('../middleware/auth');
+const Certificate = require('../models/Certificate');
+const User = require('../models/User');
+
+/**
+ * POST /api/certificates/register
+ * Guarda el certificado en MongoDB y publica un mensaje
+ * en Cloudflare Queue para que el Worker Consumer envíe
+ * el correo de notificación al usuario.
+ */
+router.post('/register', authMiddleware, async (req, res) => {
+  try {
+    const { moduloId, moduloTitulo, certCode } = req.body;
+
+    if (!moduloId || !moduloTitulo || !certCode) {
+      return res.status(400).json({ error: 'Faltan datos del certificado.' });
+    }
+
+    // Obtener datos del usuario desde MongoDB usando el sdkUserId
+    const user = await User.findOne({ sdkUserId: req.userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    // ── Guardar certificado en MongoDB ──────────────────────────
+    const certificate = new Certificate({
+      userId:      req.userId,
+      userEmail:   user.email,
+      userName:    `${user.nombre} ${user.apellido}`,
+      moduloId,
+      moduloTitulo,
+      certCode,
+    });
+    await certificate.save();
+    console.log(`Certificado registrado: ${certCode} — ${user.email}`);
+
+    // ── Publicar en Cloudflare Queue (mensajería en la nube) ────
+    const { CF_API_TOKEN, CF_ACCOUNT_ID, CF_QUEUE_NAME } = process.env;
+
+    if (CF_API_TOKEN && CF_ACCOUNT_ID && CF_QUEUE_NAME) {
+      const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${CF_QUEUE_NAME}/messages`;
+
+      const fecha = new Date().toLocaleDateString('es-CO', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      });
+
+      const queueRes = await fetch(queueUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{
+            body: {
+              email:       user.email,
+              name:        `${user.nombre} ${user.apellido}`,
+              moduloTitulo,
+              certCode,
+              date:        fecha,
+            },
+          }],
+        }),
+      });
+
+      if (!queueRes.ok) {
+        const errText = await queueRes.text();
+        console.error('Error publicando en Cloudflare Queue:', errText);
+        // No se falla la request — el certificado ya fue guardado
+      } else {
+        console.log(`Mensaje encolado en "${CF_QUEUE_NAME}" para certificado ${certCode}`);
+      }
+    } else {
+      console.log('CF_QUEUE_NAME no configurado — saltando mensajería en la nube');
+    }
+
+    res.status(201).json({ success: true, certCode });
+
+  } catch (error) {
+    // certCode duplicado — ya fue registrado antes (no es error)
+    if (error.code === 11000) {
+      return res.status(200).json({ success: true, message: 'Certificado ya registrado.' });
+    }
+    console.error('Error registrando certificado:', error);
+    res.status(500).json({ error: 'Error al registrar el certificado.' });
+  }
+});
+
+module.exports = router;

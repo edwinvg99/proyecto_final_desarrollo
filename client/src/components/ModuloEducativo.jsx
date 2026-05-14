@@ -107,9 +107,30 @@ function ModuloEducativo() {
     setResultados({ correctas, total: modulo.examen.length });
   };
 
+  /* ── Registrar certificado en backend y disparar email via Queue ── */
+  const registrarCertificado = async (codigo) => {
+    try {
+      await fetch(`${API_URL}/api/certificates/register`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moduloId:    modulo.id,
+          moduloTitulo: modulo.titulo,
+          certCode:    codigo,
+        }),
+      });
+    } catch (err) {
+      // No bloquear al usuario si el registro falla
+      console.error('No se pudo registrar el certificado:', err);
+    }
+  };
+
   /* ── Certificate PDF — dark premium ── */
   const generarCertificado = () => {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    // Generar código ANTES de buildAndPreview para poder pasarlo al API
+    const codigo = `EC-${Date.now().toString(36).toUpperCase()}-${user.nombre.substring(0, 2).toUpperCase()}`;
     const W = 297;
     const H = 210;
 
@@ -224,7 +245,6 @@ function ModuloEducativo() {
       doc.text('https://energiaclara.up.railway.app/', W / 2, fechaY + 9, { align: 'center' });
 
       // ── Código discreto ──
-      const codigo = `EC-${Date.now().toString(36).toUpperCase()}-${user.nombre.substring(0, 2).toUpperCase()}`;
       doc.setFontSize(8);
       doc.setTextColor(71, 85, 105);
       doc.text(`Código: ${codigo}`, W / 2, fechaY + 17, { align: 'center' });
@@ -237,8 +257,8 @@ function ModuloEducativo() {
     };
 
     loadImg(tdeaLogoPng)
-      .then((logoImg) => buildAndPreview(logoImg))
-      .catch(() => buildAndPreview(null));
+      .then((logoImg) => { buildAndPreview(logoImg); registrarCertificado(codigo); })
+      .catch(()       => { buildAndPreview(null);    registrarCertificado(codigo); });
   };
 
   const descargarCertificado = () => {

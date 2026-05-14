@@ -1,0 +1,35 @@
+services:
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
+    image: energia-clara-frontend:latest
+    container_name: energia-clara-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: energia-clara-backend:latest
+    container_name: energia-clara-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

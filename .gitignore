@@ -4,3 +4,10 @@ documentacion_nueva/
 .env
 .claude/
 .Claude/
+
+# Terraform — archivos con secretos y estado local
+terraform/terraform.tfvars
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
