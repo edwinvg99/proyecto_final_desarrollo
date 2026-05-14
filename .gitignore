@@ -1,0 +1,6 @@
+doc/
+docs/
+documentacion_nueva/
+.env
+.claude/
+.Claude/

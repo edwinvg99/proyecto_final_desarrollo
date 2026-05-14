@@ -1,0 +1,25 @@
+Server en puerto 5000
+MongoDB Atlas conectado
+[Noticias] Recolectando noticias de fuentes colombianas...
+[Minenergía] Iniciando scraping con Playwright...
+[Minenergía] Navegando a: https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/
+[Minenergía] Esperando a que JavaScript cargue la tabla...
+[Minenergía] Buscando tabla de noticias...
+[Minenergía] Procesando página 1...
+[Minenergía] Encontradas 10 filas en página 1
+[Minenergía] 10 noticias válidas en página 1
+[Minenergía] Navegando a siguiente página...
+[Minenergía] Procesando página 2...
+[Minenergía] Encontradas 10 filas en página 2
+[Minenergía] 10 noticias válidas en página 2
+[Minenergía] Scraping completado: 20 noticias totales
+[Noticias] Ministerio de Minas y Energía: 20 artículos
+[Noticias] Semana Sostenible: 7 artículos
+[Noticias] El Tiempo - Medio Ambiente: 2 artículos
+[Noticias] SER Colombia: 5 artículos
+[Noticias] Total: 34 noticias recolectadas.
+Error no manejado: No permitido por CORS
+Error no manejado: No permitido por CORS
+Error no manejado: No permitido por CORS
+Error no manejado: No permitido por CORS
+Error no manejado: No permitido por CORS
