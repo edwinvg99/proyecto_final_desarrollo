@@ -47,8 +47,8 @@ pipeline {
     stage('Health Check') {
       steps {
         echo 'Verificando que el backend responde...'
-        sh 'sleep 15'
-        sh 'curl -f http://localhost:5000/api/health || exit 1'
+        sh 'sleep 10'
+        sh 'docker exec energia-clara-backend curl -f http://localhost:5000/api/health'
         echo 'Backend saludable'
       }
     }
