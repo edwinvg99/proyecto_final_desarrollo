@@ -37,7 +37,7 @@ pipeline {
       steps {
         echo 'Desplegando con docker-compose...'
         withCredentials([file(credentialsId: 'server-env-file', variable: 'ENV_FILE')]) {
-          sh 'cp $ENV_FILE server/.env'
+          sh 'chmod u+w server && cp $ENV_FILE server/.env'
         }
         sh 'docker-compose down --remove-orphans || true'
         sh 'docker-compose up -d'
