@@ -114,9 +114,11 @@ function ModuloEducativo() {
         method: 'POST',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          moduloId:    modulo.id,
+          moduloId:     modulo.id,
           moduloTitulo: modulo.titulo,
-          certCode:    codigo,
+          certCode:     codigo,
+          userEmail:    user.email,
+          userName:     `${user.nombre} ${user.apellido}`,
         }),
       });
     } catch (err) {

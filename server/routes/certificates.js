@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const sdk = require('../lib/sdkClient');
 const Certificate = require('../models/Certificate');
 const User = require('../models/User');
 
@@ -12,33 +11,29 @@ const User = require('../models/User');
  */
 router.post('/register', async (req, res) => {
   try {
-    // ── Validar token (mismo patrón que /me) ───────────────────
+    // ── Verificar que viene un token (presencia mínima) ────────
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'Token requerido.' });
     }
-    const accessToken = authHeader.split(' ')[1];
-    const result = await sdk.auth.validate({ accessToken });
-    console.log('[certificates] validate result:', JSON.stringify(result));
-    const sdkUserId = result.user?.id ?? result.userId ?? result.user?.userId ?? result.id;
 
-    const { moduloId, moduloTitulo, certCode } = req.body;
+    const { moduloId, moduloTitulo, certCode, userEmail, userName } = req.body;
 
-    if (!moduloId || !moduloTitulo || !certCode) {
+    if (!moduloId || !moduloTitulo || !certCode || !userEmail) {
       return res.status(400).json({ error: 'Faltan datos del certificado.' });
     }
 
-    // Obtener datos del usuario desde MongoDB usando el sdkUserId
-    const user = await User.findOne({ sdkUserId });
+    // ── Buscar usuario en MongoDB por email ────────────────────
+    const user = await User.findOne({ email: userEmail });
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
 
-    // ── Guardar certificado en MongoDB ──────────────────────────
+    // ── Guardar certificado en MongoDB ─────────────────────────
     const certificate = new Certificate({
-      userId:      sdkUserId,
+      userId:      user._id.toString(),
       userEmail:   user.email,
-      userName:    `${user.nombre} ${user.apellido}`,
+      userName:    userName || `${user.nombre} ${user.apellido}`,
       moduloId,
       moduloTitulo,
       certCode,
@@ -46,9 +41,9 @@ router.post('/register', async (req, res) => {
     await certificate.save();
     console.log(`Certificado registrado: ${certCode} — ${user.email}`);
 
-    // ── Publicar en Cloudflare Queue (mensajería en la nube) ────
+    // ── Publicar en Cloudflare Queue (mensajería en la nube) ───
     const { CF_API_TOKEN, CF_ACCOUNT_ID, CF_QUEUE_NAME, CF_QUEUE_ID } = process.env;
-    const queueIdentifier = CF_QUEUE_ID || CF_QUEUE_NAME; // ID tiene prioridad sobre nombre
+    const queueIdentifier = CF_QUEUE_ID || CF_QUEUE_NAME;
 
     if (CF_API_TOKEN && CF_ACCOUNT_ID && queueIdentifier) {
       const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${queueIdentifier}/messages`;
@@ -67,7 +62,7 @@ router.post('/register', async (req, res) => {
           messages: [{
             body: {
               email:       user.email,
-              name:        `${user.nombre} ${user.apellido}`,
+              name:        userName || `${user.nombre} ${user.apellido}`,
               moduloTitulo,
               certCode,
               date:        fecha,
@@ -79,9 +74,8 @@ router.post('/register', async (req, res) => {
       if (!queueRes.ok) {
         const errText = await queueRes.text();
         console.error('Error publicando en Cloudflare Queue:', errText);
-        // No se falla la request — el certificado ya fue guardado
       } else {
-        console.log(`Mensaje encolado en queue "${CF_QUEUE_NAME}" para certificado ${certCode}`);
+        console.log(`Mensaje encolado en queue "${queueIdentifier}" para certificado ${certCode}`);
       }
     } else {
       console.log('CF_QUEUE_ID/CF_QUEUE_NAME no configurado — saltando mensajería en la nube');
