@@ -19,7 +19,8 @@ router.post('/register', async (req, res) => {
     }
     const accessToken = authHeader.split(' ')[1];
     const result = await sdk.auth.validate({ accessToken });
-    const sdkUserId = result.user?.id;
+    console.log('[certificates] validate result:', JSON.stringify(result));
+    const sdkUserId = result.user?.id ?? result.userId ?? result.user?.userId ?? result.id;
 
     const { moduloId, moduloTitulo, certCode } = req.body;
 
