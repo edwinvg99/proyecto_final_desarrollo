@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const sdk = require('../lib/sdkClient');
 const Certificate = require('../models/Certificate');
 const User = require('../models/User');
 
@@ -10,8 +10,17 @@ const User = require('../models/User');
  * en Cloudflare Queue para que el Worker Consumer envíe
  * el correo de notificación al usuario.
  */
-router.post('/register', authMiddleware, async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
+    // ── Validar token (mismo patrón que /me) ───────────────────
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token requerido.' });
+    }
+    const accessToken = authHeader.split(' ')[1];
+    const result = await sdk.auth.validate({ accessToken });
+    const sdkUserId = result.user?.id;
+
     const { moduloId, moduloTitulo, certCode } = req.body;
 
     if (!moduloId || !moduloTitulo || !certCode) {
@@ -19,14 +28,14 @@ router.post('/register', authMiddleware, async (req, res) => {
     }
 
     // Obtener datos del usuario desde MongoDB usando el sdkUserId
-    const user = await User.findOne({ sdkUserId: req.userId });
+    const user = await User.findOne({ sdkUserId });
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado.' });
     }
 
     // ── Guardar certificado en MongoDB ──────────────────────────
     const certificate = new Certificate({
-      userId:      req.userId,
+      userId:      sdkUserId,
       userEmail:   user.email,
       userName:    `${user.nombre} ${user.apellido}`,
       moduloId,
