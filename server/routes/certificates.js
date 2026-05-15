@@ -46,10 +46,19 @@ router.post('/register', async (req, res) => {
     const queueIdentifier = CF_QUEUE_ID || CF_QUEUE_NAME;
 
     if (CF_API_TOKEN && CF_ACCOUNT_ID && queueIdentifier) {
-      const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${queueIdentifier}/messages`;
+      // /messages/batch acepta array de mensajes con body como string
+      const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${queueIdentifier}/messages/batch`;
 
       const fecha = new Date().toLocaleDateString('es-CO', {
         day: 'numeric', month: 'long', year: 'numeric',
+      });
+
+      const msgBody = JSON.stringify({
+        email:       user.email,
+        name:        userName || `${user.nombre} ${user.apellido}`,
+        moduloTitulo,
+        certCode,
+        date:        fecha,
       });
 
       const queueRes = await fetch(queueUrl, {
@@ -59,16 +68,7 @@ router.post('/register', async (req, res) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [{
-            body: JSON.stringify({
-              email:       user.email,
-              name:        userName || `${user.nombre} ${user.apellido}`,
-              moduloTitulo,
-              certCode,
-              date:        fecha,
-            }),
-            content_type: 'json',
-          }],
+          messages: [{ body: msgBody, content_type: 'text' }],
         }),
       });
 
