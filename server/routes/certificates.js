@@ -37,10 +37,11 @@ router.post('/register', authMiddleware, async (req, res) => {
     console.log(`Certificado registrado: ${certCode} — ${user.email}`);
 
     // ── Publicar en Cloudflare Queue (mensajería en la nube) ────
-    const { CF_API_TOKEN, CF_ACCOUNT_ID, CF_QUEUE_NAME } = process.env;
+    const { CF_API_TOKEN, CF_ACCOUNT_ID, CF_QUEUE_NAME, CF_QUEUE_ID } = process.env;
+    const queueIdentifier = CF_QUEUE_ID || CF_QUEUE_NAME; // ID tiene prioridad sobre nombre
 
-    if (CF_API_TOKEN && CF_ACCOUNT_ID && CF_QUEUE_NAME) {
-      const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${CF_QUEUE_NAME}/messages`;
+    if (CF_API_TOKEN && CF_ACCOUNT_ID && queueIdentifier) {
+      const queueUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/queues/${queueIdentifier}/messages`;
 
       const fecha = new Date().toLocaleDateString('es-CO', {
         day: 'numeric', month: 'long', year: 'numeric',
@@ -70,10 +71,10 @@ router.post('/register', authMiddleware, async (req, res) => {
         console.error('Error publicando en Cloudflare Queue:', errText);
         // No se falla la request — el certificado ya fue guardado
       } else {
-        console.log(`Mensaje encolado en "${CF_QUEUE_NAME}" para certificado ${certCode}`);
+        console.log(`Mensaje encolado en queue "${CF_QUEUE_NAME}" para certificado ${certCode}`);
       }
     } else {
-      console.log('CF_QUEUE_NAME no configurado — saltando mensajería en la nube');
+      console.log('CF_QUEUE_ID/CF_QUEUE_NAME no configurado — saltando mensajería en la nube');
     }
 
     res.status(201).json({ success: true, certCode });
