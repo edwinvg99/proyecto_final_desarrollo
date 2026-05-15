@@ -11,7 +11,8 @@ export default {
   async queue(batch, env) {
     for (const message of batch.messages) {
       try {
-        const { email, name, moduloTitulo, certCode, date } = message.body;
+        const data = typeof message.body === 'string' ? JSON.parse(message.body) : message.body;
+        const { email, name, moduloTitulo, certCode, date } = data;
 
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
