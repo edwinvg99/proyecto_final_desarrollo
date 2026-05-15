@@ -26,9 +26,7 @@ dns.setDefaultResultOrder('ipv4first');
 const app = express();
 app.set('trust proxy', 1);
 
-// ============================================================
-// SEGURIDAD: Helmet (cabeceras HTTP seguras)
-// ============================================================
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false, // Deshabilitado para SPA en desarrollo

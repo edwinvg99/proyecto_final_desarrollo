@@ -68,7 +68,7 @@ const Educativo = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-14 text-center">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 mb-4">
             <GraduationCap className="h-3 w-3" />
-            Plataforma de aprendizaje
+            Plataforma de cursos
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 leading-tight">
             Módulos{" "}
