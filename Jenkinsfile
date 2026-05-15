@@ -39,6 +39,7 @@ pipeline {
         withCredentials([file(credentialsId: 'server-env-file', variable: 'ENV_FILE')]) {
           sh 'chmod -R 777 server && cp $ENV_FILE server/.env'
         }
+        sh 'docker rm -f energia-clara-backend energia-clara-frontend || true'
         sh 'docker-compose down --remove-orphans || true'
         sh 'docker-compose up -d'
       }
