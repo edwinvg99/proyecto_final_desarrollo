@@ -60,13 +60,14 @@ router.post('/register', async (req, res) => {
         },
         body: JSON.stringify({
           messages: [{
-            body: {
+            body: JSON.stringify({
               email:       user.email,
               name:        userName || `${user.nombre} ${user.apellido}`,
               moduloTitulo,
               certCode,
               date:        fecha,
-            },
+            }),
+            content_type: 'json',
           }],
         }),
       });
