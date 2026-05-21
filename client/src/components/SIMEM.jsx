@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import API_URL from "../api";
 
-// Vivid colors optimized for dark backgrounds
 const TIPO_CONFIG = {
   Hidráulica: {
     hex: "#38BDF8",
