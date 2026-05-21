@@ -417,7 +417,7 @@ export default function Indicadores() {
               <div className="flex items-center gap-2 mb-4">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20">
                   <BarChart2 className="h-3 w-3" />
-                  Sistema Interconectado Nacional
+                  Sistema Interconectado Nacional ENTREGA FINAL
                 </span>
               </div>
               <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
